@@ -35,13 +35,11 @@ function git(...args) {
 
 /** Resolve base version from latest tag, fallback to package.json. */
 function resolveBaseVersion() {
-  // Try tag first: v0.1.0 → 0.1.0
   const tag = git("describe", "--tags", "--abbrev=0");
   if (tag) {
     const ver = tag.replace(/^v/, "");
     if (/^\d+\.\d+\.\d+$/.test(ver)) return ver;
   }
-  // Fallback: read from package.json
   try {
     const pkg = JSON.parse(fs.readFileSync(PKG_PATH, "utf-8"));
     return pkg.version ?? "0.0.0";
@@ -50,26 +48,37 @@ function resolveBaseVersion() {
   }
 }
 
+/** Count commits since the given tag, then bump patch. */
 /** Count commits since the given tag. */
 function commitCountSince(tag) {
   if (!tag) return null;
-  const count = git("rev-list", "--count", `${tag}..HEAD`);
-  return count !== null ? parseInt(count, 10) : null;
+  try {
+    const count = execSync(`git rev-list --count ${tag}..HEAD`, {
+      cwd: ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+    }).trim();
+    return parseInt(count, 10);
+  } catch {
+    return null;
+  }
 }
 
 function buildVersion() {
+  const tag = git("describe", "--tags", "--abbrev=0");
+  if (!tag) {
+    // No tags yet — use package.json as-is
+    const pkg = JSON.parse(fs.readFileSync(PKG_PATH, "utf-8"));
+    return pkg.version ?? "0.0.0";
+  }
+
   const base = resolveBaseVersion();
-  const parts = base.split(".").map(Number);
-  if (parts.length < 3) return base;
-
-  // Count commits since the tag that gave us this base version
-  const tag = `v${parts[0]}.${parts[1]}.${parts[2]}`;
   const count = commitCountSince(tag);
-
-  // count === 0 → on the tagged commit itself
-  // count > 0  → some commits after the tag (use -dev.N suffix per VS Code semver spec)
   if (count === null || count === 0) return base;
-  return `${base}-dev.${count}`;
+
+  // Bump patch number: 0.1.0 + 5 commits → 0.1.5
+  const [major, minor] = base.split(".").map(Number);
+  return `${major}.${minor}.${count}`;
 }
 
 function applyVersion(version) {
