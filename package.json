@@ -2,7 +2,7 @@
   "name": "agenteam-for-vscode",
   "displayName": "Agenteam for VSCode",
   "description": "Send code selections from your editor to agenteam ink-renderer with file-source provenance",
-  "version": "0.1.0",
+  "version": "0.1.0-dev.5",
   "publisher": "agenteam",
   "license": "Apache-2.0",
   "repository": {

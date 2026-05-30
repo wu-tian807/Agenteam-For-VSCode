@@ -67,9 +67,9 @@ function buildVersion() {
   const count = commitCountSince(tag);
 
   // count === 0 → on the tagged commit itself
-  // count > 0  → some commits after the tag
+  // count > 0  → some commits after the tag (use -dev.N suffix per VS Code semver spec)
   if (count === null || count === 0) return base;
-  return `${base}.${count}`;
+  return `${base}-dev.${count}`;
 }
 
 function applyVersion(version) {
