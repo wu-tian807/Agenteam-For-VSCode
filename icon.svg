@@ -5,18 +5,10 @@
       <stop offset="100%" stop-color="#50E6FF"/>
     </linearGradient>
   </defs>
+  
   <!-- 背景圆角方框 -->
-  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
   
-  <!-- 终端/代码符号 ">_" -->
-  <text x="64" y="58" font-family="monospace" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">&gt;_</text>
-  
-  <!-- 下方的文字 "A"（Agenteam）-->
-  <text x="64" y="92" font-family="sans-serif" font-size="36" font-weight="800" fill="white" text-anchor="middle" dominant-baseline="central">A</text>
-  
-  <!-- 小装饰点 -->
-  <circle cx="18" cy="18" r="3" fill="rgba(255,255,255,0.4)"/>
-  <circle cx="110" cy="18" r="3" fill="rgba(255,255,255,0.4)"/>
-  <circle cx="18" cy="110" r="3" fill="rgba(255,255,255,0.4)"/>
-  <circle cx="110" cy="110" r="3" fill="rgba(255,255,255,0.4)"/>
+  <!-- 终端提示符 ">_" -->
+  <text x="38" y="76" font-family="Consolas, 'Courier New', monospace" font-size="56" font-weight="bold" fill="white" letter-spacing="4">&gt;_</text>
 </svg>
