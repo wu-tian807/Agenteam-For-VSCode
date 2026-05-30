@@ -1,0 +1,54 @@
+{
+  "name": "agenteam-for-vscode",
+  "displayName": "Agenteam for VSCode",
+  "description": "Send code selections from your editor to agenteam ink-renderer with file-source provenance",
+  "version": "0.1.0",
+  "publisher": "agenteam",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wtianxu/agentteam-os"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agenteam.sendSelection",
+        "title": "Agenteam: Send Selection to Ink"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "agenteam.sendSelection",
+          "group": "modification",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "agenteam.sendSelection",
+        "key": "cmd+shift+l",
+        "when": "editorHasSelection"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "package": "npm run build && vsce package",
+    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.25.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.5.0"
+  }
+}
