@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wtianxu/agentteam-os"
+    "url": "https://github.com/wu-tian807/Agenteam-For-VSCode"
   },
   "engines": {
     "vscode": "^1.90.0"
@@ -41,9 +41,12 @@
     ]
   },
   "scripts": {
-    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "version": "node scripts/auto-version.js --apply",
+    "build": "npm run version && esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
     "package": "npm run build && vsce package",
-    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch"
+    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
+    "publish": "vsce publish",
+    "release": "npm run version && npm run build && vsce publish"
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0",
