@@ -5,10 +5,36 @@
       <stop offset="100%" stop-color="#50E6FF"/>
     </linearGradient>
   </defs>
-  
+
   <!-- 背景圆角方框 -->
-  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
-  
-  <!-- 终端提示符 ">_" -->
-  <text x="38" y="76" font-family="Consolas, 'Courier New', monospace" font-size="56" font-weight="bold" fill="white" letter-spacing="4">&gt;_</text>
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+
+  <!-- ">" 在左侧 -->
+  <text
+    x="30" y="72"
+    font-family="Consolas, 'Courier New', monospace"
+    font-size="50"
+    font-weight="bold"
+    fill="white"
+  >&gt;</text>
+
+  <!-- "A" 悬浮在 "_" 上方，表示光标处正在输入的字符 -->
+  <text
+    x="78" y="70"
+    text-anchor="middle"
+    font-family="'Segoe UI', Arial, sans-serif"
+    font-size="40"
+    font-weight="bold"
+    fill="white"
+  >A</text>
+
+  <!-- "_" 光标横线，紧贴 A 正下方 -->
+  <text
+    x="78" y="78"
+    text-anchor="middle"
+    font-family="Consolas, 'Courier New', monospace"
+    font-size="44"
+    font-weight="bold"
+    fill="white"
+  >_</text>
 </svg>
