@@ -76,9 +76,9 @@ function buildVersion() {
   const count = commitCountSince(tag);
   if (count === null || count === 0) return base;
 
-  // Bump patch number: 0.1.0 + 5 commits → 0.1.5
-  const [major, minor] = base.split(".").map(Number);
-  return `${major}.${minor}.${count}`;
+  // Bump patch number: 0.1.5 tag + 1 commit → 0.1.6
+  const [major, minor, patch] = base.split(".").map(Number);
+  return `${major}.${minor}.${patch + count}`;
 }
 
 function applyVersion(version) {
