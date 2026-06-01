@@ -91,7 +91,7 @@ function apiCall(conn, method, apiPath, body) {
     req.end();
   });
 }
-async function sendSelection(conn, instanceId) {
+async function sendSelection(conn) {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.selection.isEmpty) {
     vscode.window.showWarningMessage("No text selected");
@@ -103,7 +103,7 @@ async function sendSelection(conn, instanceId) {
   const lineStart = sel.start.line + 1;
   const lineEnd = sel.end.line + 1;
   const language = editor.document.languageId;
-  const { status, data } = await apiCall(conn, "POST", `/api/instances/${instanceId}/snippet`, {
+  const { status, data } = await apiCall(conn, "POST", "/api/events/snippet", {
     path: filePath,
     content,
     lineStart,
@@ -112,7 +112,7 @@ async function sendSelection(conn, instanceId) {
   });
   if (status === 200) {
     vscode.window.setStatusBarMessage(
-      `$(check) Sent to agenteam [${instanceId}]: ${filePath}:${lineStart}-${lineEnd}`,
+      `$(check) Sent to agenteam: ${filePath}:${lineStart}-${lineEnd}`,
       5e3
     );
     return true;
@@ -129,49 +129,7 @@ async function handleSendSelection(context) {
     );
     return;
   }
-  let instances;
-  try {
-    const { data } = await apiCall(conn, "GET", "/api/instances");
-    const arr = data?.instances;
-    if (!Array.isArray(arr)) {
-      vscode.window.showErrorMessage("No agenteam instances found");
-      return;
-    }
-    instances = arr;
-    if (instances.length === 0) {
-      vscode.window.showErrorMessage("No agenteam instances available");
-      return;
-    }
-  } catch (err) {
-    vscode.window.showErrorMessage(`Failed to connect to agenteam: ${err}`);
-    return;
-  }
-  const lastKey = "agenteam.lastInstanceId";
-  const lastId = context.globalState.get(lastKey);
-  const items = instances.map((i) => ({
-    label: i.id,
-    description: i.status === "running" ? `$(check) ${i.status}` : i.status,
-    detail: i.statusMessage,
-    id: i.id
-  }));
-  const running = instances.filter((i) => i.status === "running");
-  if (running.length === 1) {
-    const ok2 = await sendSelection(conn, running[0].id);
-    if (ok2) await context.globalState.update(lastKey, running[0].id);
-    return;
-  }
-  let defaultIdx = -1;
-  if (lastId) {
-    defaultIdx = items.findIndex((i) => i.id === lastId && i.description.includes("running"));
-  }
-  const pick = await vscode.window.showQuickPick(items, {
-    placeHolder: "Select agenteam instance to send to",
-    matchOnDescription: true,
-    activeItem: defaultIdx >= 0 ? items[defaultIdx] : void 0
-  });
-  if (!pick) return;
-  const ok = await sendSelection(conn, pick.id);
-  if (ok) await context.globalState.update(lastKey, pick.id);
+  await sendSelection(conn);
 }
 function activate(context) {
   console.log("[agenteam] extension activated");

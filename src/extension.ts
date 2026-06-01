@@ -22,12 +22,6 @@ interface ConnInfo {
   port: number;
 }
 
-interface InstanceInfo {
-  id: string;
-  status: string;
-  statusMessage?: string;
-}
-
 // ─── Config discovery ───
 
 function findConnInfo(): ConnInfo | null {
@@ -84,7 +78,7 @@ function apiCall(
 
 // ─── Send selection ───
 
-async function sendSelection(conn: ConnInfo, instanceId: string): Promise<boolean> {
+async function sendSelection(conn: ConnInfo): Promise<boolean> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.selection.isEmpty) {
     vscode.window.showWarningMessage("No text selected");
@@ -99,7 +93,8 @@ async function sendSelection(conn: ConnInfo, instanceId: string): Promise<boolea
   const lineEnd = sel.end.line + 1;
   const language = editor.document.languageId;
 
-  const { status, data } = await apiCall(conn, "POST", `/api/instances/${instanceId}/snippet`, {
+  // Send via gateway-level events route — no instance ID needed
+  const { status, data } = await apiCall(conn, "POST", "/api/events/snippet", {
     path: filePath,
     content,
     lineStart,
@@ -109,7 +104,7 @@ async function sendSelection(conn: ConnInfo, instanceId: string): Promise<boolea
 
   if (status === 200) {
     vscode.window.setStatusBarMessage(
-      `$(check) Sent to agenteam [${instanceId}]: ${filePath}:${lineStart}-${lineEnd}`,
+      `$(check) Sent to agenteam: ${filePath}:${lineStart}-${lineEnd}`,
       5000,
     );
     return true;
@@ -130,59 +125,9 @@ async function handleSendSelection(context: vscode.ExtensionContext): Promise<vo
     return;
   }
 
-  // 1. Fetch instances
-  let instances: InstanceInfo[];
-  try {
-    const { data } = await apiCall(conn, "GET", "/api/instances");
-    const arr = (data as Record<string, unknown>)?.instances;
-    if (!Array.isArray(arr)) {
-      vscode.window.showErrorMessage("No agenteam instances found");
-      return;
-    }
-    instances = arr as InstanceInfo[];
-    if (instances.length === 0) {
-      vscode.window.showErrorMessage("No agenteam instances available");
-      return;
-    }
-  } catch (err) {
-    vscode.window.showErrorMessage(`Failed to connect to agenteam: ${err}`);
-    return;
-  }
-
-  // 2. Quick pick — pick a target instance
-  const lastKey = "agenteam.lastInstanceId";
-  const lastId = context.globalState.get<string>(lastKey);
-  const items = instances.map((i) => ({
-    label: i.id,
-    description: i.status === "running" ? `$(check) ${i.status}` : i.status,
-    detail: i.statusMessage,
-    id: i.id,
-  }));
-
-  // Auto-select if only one running instance
-  const running = instances.filter((i) => i.status === "running");
-  if (running.length === 1) {
-    const ok = await sendSelection(conn, running[0].id);
-    if (ok) await context.globalState.update(lastKey, running[0].id);
-    return;
-  }
-
-  // Pre-select last used if still running
-  let defaultIdx = -1;
-  if (lastId) {
-    defaultIdx = items.findIndex((i) => i.id === lastId && i.description.includes("running"));
-  }
-
-  const pick = await vscode.window.showQuickPick(items, {
-    placeHolder: "Select agenteam instance to send to",
-    matchOnDescription: true,
-    activeItem: defaultIdx >= 0 ? items[defaultIdx] : undefined,
-  });
-
-  if (!pick) return;
-
-  const ok = await sendSelection(conn, pick.id);
-  if (ok) await context.globalState.update(lastKey, pick.id);
+  // Gateway-level events route — no instance selection needed.
+  // Snippet events broadcast to all WS clients (ink-renderer) regardless of instance.
+  await sendSelection(conn);
 }
 
 // ─── Activation ───
