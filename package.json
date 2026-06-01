@@ -3,7 +3,7 @@
   "displayName": "Agenteam for VSCode",
   "description": "Send code selections from your editor to agenteam ink-renderer with file-source provenance",
   "version": "0.2.0",
-  "publisher": "wu-tian807",
+  "publisher": "agenteam",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
