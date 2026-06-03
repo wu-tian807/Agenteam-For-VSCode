@@ -1,8 +1,8 @@
 {
   "name": "agenteam-for-vscode",
   "displayName": "Agenteam for VSCode",
-  "description": "Send code selections from your editor to agenteam ink-renderer with file-source provenance",
-  "version": "0.2.0",
+  "description": "Send editor selections to the focused agenteam ink-renderer via local IDE Bridge (file path, line range, language).",
+  "version": "0.2.1",
   "publisher": "agenteam",
   "license": "Apache-2.0",
   "repository": {
@@ -37,20 +37,27 @@
       {
         "command": "agenteam.sendSelection",
         "key": "cmd+shift+l",
+        "mac": "cmd+shift+l",
+        "win": "ctrl+shift+l",
+        "linux": "ctrl+shift+l",
         "when": "editorHasSelection"
       }
     ]
   },
   "scripts": {
     "version": "node scripts/auto-version.js --apply",
-    "build": "npm run version && esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
-    "package": "npm run build && vsce package",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "package": "npm run build && vsce package --no-dependencies",
     "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
     "publish": "vsce publish",
-    "release": "npm run version && npm run build && vsce publish"
+    "release": "npm run build && vsce publish"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0",
+    "@types/ws": "^8.5.13",
     "esbuild": "^0.25.0",
     "@vscode/vsce": "^3.0.0",
     "typescript": "^5.5.0"
