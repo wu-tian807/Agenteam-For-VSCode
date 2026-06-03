@@ -30,6 +30,7 @@ interface ClientRecord {
 
 const MAX_SNIPPET_BYTES = 1_000_000;
 const LOCK_DIR = path.join(os.homedir(), ".agenteam", "ide");
+const LOCK_HEARTBEAT_MS = 15_000;
 
 // ─── Server ───
 
@@ -42,6 +43,8 @@ export class IdeBridgeServer {
   private readonly clients = new Map<string, ClientRecord>();
   private readonly authed = new WeakSet<WebSocket>();
   private readonly wsToClientId = new WeakMap<WebSocket, string>();
+  private lockHeartbeat: ReturnType<typeof setInterval> | null = null;
+  private lockPayload: Record<string, unknown> | null = null;
 
   async start(workspaceFolders: readonly vscode.WorkspaceFolder[]): Promise<void> {
     if (this.wss) return;
@@ -69,18 +72,29 @@ export class IdeBridgeServer {
 
     fs.mkdirSync(LOCK_DIR, { recursive: true });
     this.lockPath = path.join(LOCK_DIR, `${this.port}.lock`);
-    const lock = {
+    this.lockPayload = {
       port: this.port,
       token: this.token,
       pid: process.pid,
       workspaceFolders: folders,
       updatedAt: Date.now(),
     };
-    fs.writeFileSync(this.lockPath, JSON.stringify(lock, null, 2));
+    this.writeLock();
+    this.lockHeartbeat = setInterval(() => this.writeLock(), LOCK_HEARTBEAT_MS);
     console.log(`[agenteam] IDE bridge listening on 127.0.0.1:${this.port}`);
   }
 
+  private writeLock(): void {
+    if (!this.lockPath || !this.lockPayload) return;
+    this.lockPayload.updatedAt = Date.now();
+    fs.writeFileSync(this.lockPath, JSON.stringify(this.lockPayload, null, 2));
+  }
+
   stop(): void {
+    if (this.lockHeartbeat) {
+      clearInterval(this.lockHeartbeat);
+      this.lockHeartbeat = null;
+    }
     for (const { ws } of this.clients.values()) {
       try { ws.close(1000); } catch { /* ignore */ }
     }
@@ -93,6 +107,7 @@ export class IdeBridgeServer {
       try { fs.unlinkSync(this.lockPath); } catch { /* ignore */ }
       this.lockPath = "";
     }
+    this.lockPayload = null;
   }
 
   /** Send snippet to the ink-renderer that was most recently focused. */
