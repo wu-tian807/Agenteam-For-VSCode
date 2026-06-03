@@ -1,8 +1,8 @@
 {
   "name": "agenteam-for-vscode",
   "displayName": "Agenteam for VSCode",
-  "description": "Send editor selections to the focused agenteam ink-renderer via local IDE Bridge (file path, line range, language).",
-  "version": "0.2.2",
+  "description": "Send code selections from your editor to the focused agenteam ink-renderer via local IDE Bridge (file path, line range, language).",
+  "version": "0.2.1",
   "publisher": "agenteam",
   "license": "Apache-2.0",
   "repository": {

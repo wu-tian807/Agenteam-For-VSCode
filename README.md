@@ -1,80 +1,86 @@
 # Agenteam for VSCode / Cursor
 
-将编辑器中的代码选区发送到 **当前聚焦的** [agenteam](https://github.com/wu-tian807/agenteam-ink-renderer) ink-renderer 输入框，并附带文件路径、行号与语言信息。
+Send code selections from your editor to the **currently focused** [agenteam](https://github.com/wu-tian807/agenteam-ink-renderer) ink-renderer input box, with file path, line range, and language metadata.
 
-## 功能
+## Features
 
-- **状态栏** — 有选区时显示 `Send to Ink`，一键发送
-- **快捷键** — macOS `Cmd+Shift+L`；Windows / Linux `Ctrl+Shift+L`
-- **右键菜单** — 有选区时：Agenteam: Send Selection to Ink
-- **IDE Bridge** — 扩展激活后在 `127.0.0.1` 启动本地 WebSocket，写入 `~/.agenteam/ide/{port}.lock` 供 ink-renderer 发现
-- **多终端路由** — 同一工作区内多个 ink-renderer 时，snippet 只进入 **最近一次获得终端焦点** 的那个实例
+- **Status bar** — Shows `Send to Ink` when text is selected; click to send
+- **Keyboard shortcut** — macOS `Cmd+Shift+L`; Windows / Linux `Ctrl+Shift+L`
+- **Context menu** — When there is a selection: *Agenteam: Send Selection to Ink*
+- **IDE Bridge** — On activation, starts a local WebSocket on `127.0.0.1` and writes `~/.agenteam/ide/{port}.lock` for ink-renderer discovery
+- **Multi-terminal routing** — With multiple ink-renderer sessions in the same workspace, snippets go only to the instance that **most recently had terminal focus**
 
-## 工作原理
+## How it works
 
 ```
-编辑器选区 ──IDE Bridge (本地 WS)──► 聚焦的 ink-renderer 输入框
+Editor selection ──IDE Bridge (local WS)──► Focused ink-renderer input box
                 ▲
                 │  ~/.agenteam/ide/*.lock
                 │
-         ink-renderer（agenteam TUI）
+         ink-renderer (agenteam TUI)
                 │
-                └── Gateway WS（实例 / agent / 命令，与 snippet 无关）
+                └── Gateway WS (instances / agents / commands — not used for snippets)
 ```
 
-1. 安装并启用本扩展（同一 Cursor / VS Code 窗口）
-2. 在终端中启动 `agenteam`（ink-renderer 会自动连接 IDE Bridge）
-3. 在编辑器选中代码，用快捷键或状态栏发送
-4. ink-renderer 输入框出现类似 `[已粘贴 src/foo.ts:12-14 · 3 行]` 的标签，确认后提交即可
+1. Install and enable this extension (same Cursor / VS Code window)
+2. Run `agenteam` in a terminal (ink-renderer connects to the IDE Bridge automatically)
+3. Select code in the editor and send via shortcut or status bar
+4. A paste chip appears in the ink-renderer input (e.g. `[pasted src/foo.ts:12-14 · 3 lines]`); edit and submit as usual
 
-发送成功后，若使用 **集成终端** 运行 ink-renderer，扩展会尝试 `terminal.show()` 将面板切到前台。
+After a successful send, if ink-renderer runs in an **integrated terminal**, the extension may call `terminal.show()` to bring that panel forward.
 
-## 环境要求
+## Requirements
 
-| 组件 | 要求 |
-|------|------|
-| Gateway | 本地运行，`~/.agenteam/gateway.json` 存在（ink-renderer 连实例用） |
-| ink-renderer | `@agenteam/ink-renderer` + host 支持 IDE Bridge（见 agenteam_os PR） |
-| 工作区 | 扩展与 ink-renderer 的 `cwd` 应在同一 workspace 根目录下（lock 按 `workspaceFolders` 匹配） |
-| 扩展 | 本扩展已激活（否则无 lock 文件） |
+| Component | Requirement |
+|-----------|-------------|
+| Gateway | Running locally; `~/.agenteam/gateway.json` present (ink-renderer uses it for instances) |
+| ink-renderer | `@agenteam/ink-renderer` with IDE Bridge host wiring (`observeSnippets` in `ctl-command/ink-renderer.ts`) |
+| Workspace | Extension and ink-renderer `cwd` should share the same workspace root (lock matches `workspaceFolders`) |
+| Extension | Must be activated (otherwise no lock file) |
 
-可选环境变量：
+Optional environment variables:
 
-- `AGENTEAM_IDE_PORT` — 强制连接指定 IDE Bridge 端口（多窗口调试）
-- `AGENTEAM_STATE` / `AGENTEAM_STATE_DIR` — 非默认 state 目录时使用
+- `AGENTEAM_IDE_PORT` — Force a specific IDE Bridge port (multi-window debugging)
+- `AGENTEAM_STATE` / `AGENTEAM_STATE_DIR` — Non-default state directory
 
-## 命令
+## Commands
 
-| 命令 ID | 说明 |
-|---------|------|
-| `agenteam.sendSelection` | 将当前选区发送到聚焦的 ink-renderer |
+| Command ID | Description |
+|------------|-------------|
+| `agenteam.sendSelection` | Send the current selection to the focused ink-renderer |
 
-## 常见问题
+## Troubleshooting
 
-**提示 “No ink-renderer connected”**
+**“No ink-renderer connected”**
 
-- ink-renderer 未启动，或启动时扩展未激活（无 lock）
-- 工作区路径与 lock 中 `workspaceFolders` 不匹配：在同一文件夹打开编辑器并启动 agenteam
+- ink-renderer is not running, or the extension was not active when it started (no lock file)
+- Workspace path does not match `workspaceFolders` in the lock — open the same folder in the editor and start `agenteam` there
+- Restart `agenteam` after updating host code so `observeSnippets` is wired
 
-**发送无反应（旧版本）**
+**Send succeeds but nothing appears in the TUI**
 
-- v0.2.0 及以前走 `POST /api/events/snippet`（Gateway 广播）；v0.2.1 起必须搭配支持 IDE Bridge 的 ink-renderer
+- Host must implement `observeSnippets` + `startIdeBridgeSubscriber` (IDE Bridge v0.2.1+)
 
-## Release Notes
+**No reaction on older stacks**
+
+- v0.2.0 and earlier used `POST /api/events/snippet` (Gateway broadcast). v0.2.1+ requires IDE Bridge + matching ink-renderer.
+
+## Release notes
 
 ### 0.2.1
 
-- **IDE Bridge**：本地 WebSocket + lock 发现；移除 Gateway `snippet` HTTP
-- **多终端**：按 ink-renderer 上报的 `focus_state` 单播到最近聚焦实例
-- 发送后可选聚焦 VS Code 集成终端
+- **IDE Bridge**: local WebSocket + lock discovery; removed Gateway `snippet` HTTP
+- **Multi-terminal**: unicast to the ink-renderer with the latest `focus_state`
+- Lock heartbeat (`updatedAt` refreshed every 15s) for reliable discovery
+- Optional focus on VS Code integrated terminal after send
 
 ### 0.2.0
 
-- Gateway `POST /api/events/snippet`（已废弃，见 0.2.1）
+- Gateway `POST /api/events/snippet` (deprecated; see 0.2.1)
 
 ### 0.1.0
 
-- 初始 MVP：选区 + 文件来源元数据
+- Initial MVP: selection + file provenance metadata
 
 ## License
 

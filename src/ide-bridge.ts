@@ -120,7 +120,7 @@ export class IdeBridgeServer {
     if (!target) {
       return {
         ok: false,
-        error: "No ink-renderer connected — start agenteam in a terminal with this workspace open",
+        error: `No ink-renderer connected (${this.clients.size} registered on port ${this.port}) — restart agenteam in a terminal under this workspace`,
       };
     }
 
